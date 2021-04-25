@@ -1,1 +1,1 @@
-export const basePath =  process.env.NODE_ENV==='production' ? '/sekai-simulator': '';
+export const basePath =  process.env.NODE_ENV==='production' ? '/brain-whatever': '';
