@@ -8,6 +8,8 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-20.04
+    env:
+      NODE_ENV: production
     steps:
       - uses: actions/checkout@v2
 
