@@ -1,6 +1,6 @@
 module.exports = {
   reactStrictMode: true,
-  basePath: process.env.NODE_ENV==='production' ? "/brain-whatever": '/',
+  basePath: process.env.NODE_ENV==='production' ? "/brain-whatever": '',
   webpack: {
     /* config options here */
   },
