@@ -1,4 +1,4 @@
-import { usePose } from "@hooks/usePose"
+import { usePose } from "@hooks/usePoseDebugger"
 import { FC, useEffect, useRef } from "react"
 
 const pose: FC = () => {
