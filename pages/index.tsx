@@ -1,33 +1,31 @@
-import * as THREE from 'three'
-import ReactDOM from 'react-dom'
-import React, { useRef, useState } from 'react'
-import { Canvas, useFrame } from '@react-three/fiber'
+import { usePose } from "@hooks/usePose"
+import { FC, useEffect, useRef } from "react"
 
-const Box = (props: JSX.IntrinsicElements['mesh']) => {
-  const mesh = useRef<THREE.Mesh>(null!)
-  const [hovered, setHover] = useState(false)
-  const [active, setActive] = useState(false)
-  useFrame((state, delta) => (mesh.current.rotation.x += 0.01))
-  return (
-    <mesh
-      {...props}
-      ref={mesh}
-      scale={active ? 1.5 : 1}
-      onClick={(event) => setActive(!active)}
-      onPointerOver={(event) => setHover(true)}
-      onPointerOut={(event) => setHover(false)}>
-      <boxGeometry args={[1, 1, 1]} />
-      <meshStandardMaterial color={hovered ? 'hotpink' : 'orange'} />
-    </mesh>
-  )
+const pose: FC = () => {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const videoRef = useRef<HTMLVideoElement>(null)
+
+  useEffect(() => {
+    if (navigator.mediaDevices.getUserMedia) {
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then((stream) => {
+          if (videoRef.current) {
+            videoRef.current.srcObject = stream
+          }
+        })
+        .catch((err0r) => {
+          console.log("Something went wrong!")
+          console.log(err0r)
+        });
+    }
+  }, [])
+  useEffect(() => {
+    if (canvasRef.current && videoRef.current) {
+      usePose({ canvasElement: canvasRef.current, videoElement: videoRef.current })
+    }
+  }, [canvasRef, videoRef])
+
+  return <><canvas ref={canvasRef} width={videoRef.current?.width} height={225} />
+    <video autoPlay={true} ref={videoRef} width={300} /> </>
 }
-
-export const canvas = () => (
-  <Canvas style={{ height: '100vh' }}>
-    <ambientLight />
-    <pointLight position={[10, 10, 10]} />
-    <Box position={[-1.2, 0, 0]} />
-    <Box position={[1.2, 0, 0]} />
-  </Canvas>
-)
-export default canvas
+export default pose
