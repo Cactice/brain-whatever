@@ -14,10 +14,11 @@
     "@mediapipe/control_utils": "^0.5.1623725837",
     "@mediapipe/drawing_utils": "^0.3.1620248257",
     "@mediapipe/pose": "^0.3.1621277220",
+    "@react-three/drei": "6.0.3",
     "@react-three/fiber": "^6.0.17",
     "@types/three": "^0.127.1",
     "gh-pages": "^3.1.0",
-    "next": "^10.1.3",
+    "next": "^11.0.0",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "three": "^0.128.0"
@@ -26,7 +27,8 @@
     "@types/node": "^14.14.41",
     "@types/react": "^17.0.3",
     "@types/react-dom": "^16.9.4",
-    "typescript": "^4.2.4"
+    "prettier": "^2.3.2",
+    "typescript": "^4.3.2"
   },
   "license": "MIT"
 }
