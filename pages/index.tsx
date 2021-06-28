@@ -1,11 +1,11 @@
-import { usePose } from "@hooks/usePose"
-import { FC, useEffect, useRef, useCallback, Suspense, useState } from "react"
-import { Canvas, Node, useFrame, useLoader, useThree, } from '@react-three/fiber'
-import { POSE_CONNECTIONS } from "@mediapipe/pose"
-import StacySample from '../components/StacySample'
-import { Bone, Euler, Object3D, Scene, SkinnedMesh, Vector3, AnimationMixer, SkeletonHelper } from "three"
-import { useGLTF } from '@react-three/drei'
-import React from "react"
+import { usePose } from '@hooks/usePose'
+import { NormalizedLandmark } from '@mediapipe/drawing_utils'
+import { NormalizedLandmarkList } from '@mediapipe/pose'
+import { OrbitControls, useGLTF, useTexture } from '@react-three/drei'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
+import { reverse } from 'dns'
+import React, { FC, Suspense, useEffect, useRef } from "react"
+import { Bone, Euler, Object3D, SkinnedMesh, Vector3 } from "three"
 import { GLTF } from "three/examples/jsm/loaders/GLTFLoader"
 
 const Box: FC<JSX.IntrinsicElements['mesh']> = (props) => <mesh {...props}>
@@ -16,43 +16,70 @@ const BoxBlue: FC<JSX.IntrinsicElements['mesh']> = (props) => <mesh {...props}>
   <boxGeometry args={[0.1, 0.4, 0.1]} />
   <meshStandardMaterial color='orange' />
 </mesh>
-function moveJoint(joint: Bone) {
-  joint.rotation.x = Math.random() * 3.14
-  joint.rotation.y = Math.random() * 3.14
+
+function moveJoint(joint: Bone, frame = 0) {
+  joint.rotation.x = Math.random() * 0.14
+  joint.rotation.y = Math.random() * 0.14
+  joint.rotation.z = Math.random() * 0.14 + Math.sin(frame % 3.14) - 0.5
 }
 
-const Dancer = () => {
+const landmarkToVec3 = (landmark: NormalizedLandmark): Vector3 => new Vector3(landmark.x, landmark.y, landmark.z)
+const blazeposeLeftToMixamoMap = Object.fromEntries(Object.entries({
+  11: 'LeftArm',
+  13: 'LeftForeArm',
+  15: 'LeftHand',
+  23: 'LeftUpLeg',
+  25: 'LeftLeg',
+  27: 'LeftLeg',
+}).map(([blazeposeIndex, mixamoBoneId]) => [blazeposeIndex, `mixamorig${mixamoBoneId}`]))
+const blazeposeRightToMixamoMap = Object.fromEntries(Object.entries(blazeposeLeftToMixamoMap).map<[number, string]>(
+  ([blazeposeIndex, mixamoBoneId]) => [Number(blazeposeIndex) + 1, mixamoBoneId.replace('Left', 'Right')]))
+const blazeposeToMixamoMap = { ...blazeposeLeftToMixamoMap, ...blazeposeRightToMixamoMap }
+const reverseDict = (obj: { [e in string]: string }) => Object.fromEntries(Object.entries(obj).map(([k, v]) => [v, k]))
+const mixamoToBlazepose = reverseDict(blazeposeToMixamoMap)
+
+const applyLandmarksToModel =
+  (landmarks: NormalizedLandmarkList,
+    skeletonNodes: { [e in string]: Bone | undefined }
+  ) => {
+    Object.keys(blazeposeToMixamoMap).map((blazeposeIndex) => {
+      const landmark = landmarks[Number(blazeposeIndex)]
+      // Get parent landmark
+      const bone = skeletonNodes[blazeposeToMixamoMap[blazeposeIndex]]
+      if (!bone) { debugger }
+      const parentLandmark = bone?.parent?.name ? landmarks[Number(mixamoToBlazepose[bone.parent.name])] : { x: 0, y: 0, z: 0 }
+      const landmarkVec3 = landmarkToVec3(landmark)
+      const parentLandmarkVec3 = landmarkToVec3(parentLandmark ?? { x: 0, y: 0, z: 0 })
+      const angle = new Euler().setFromVector3(parentLandmarkVec3.sub(landmarkVec3))
+      bone && bone.setRotationFromEuler(angle)
+    })
+  }
+
+const Dancer: FC<{ landmarks: NormalizedLandmarkList }> = ({ landmarks }) => {
+  const texture = useTexture('stacy.jpg')
   const gltf = useGLTF('dancer.glb', '/') as GLTF & { nodes: { [e in string]: (Object3D | Bone | SkinnedMesh) } }
   const { nodes } = gltf
+  const dancer = nodes.Beta_Surface as SkinnedMesh
+  const { camera } = useThree()
 
-  const [mixer] = useState(() => new AnimationMixer(nodes.Armature))
-  useFrame((state, delta) => mixer.update(delta))
 
-  const { size } = useThree()
-  useFrame((state, delta) => {
-    moveJoint(nodes.mixamorigNeck as Bone)
-    moveJoint(nodes.mixamorigSpine as Bone)
-  })
-
-  useEffect(() => {
-    console.log(nodes); setInterval(() => {
-      if ('skeleton' in nodes.Beta_Surface) {
-        const { skeleton } = nodes.Beta_Surface
-        console.log(skeleton.bones)
-        nodes.mixamorigSpine.scale.x += 1
-        moveJoint(skeleton.bones[0])
-        moveJoint(skeleton.bones[1])
-        moveJoint(skeleton.bones[2])
-      }
-    }, 3000)
-  }, [])
+  useEffect(() => { console.log(nodes); camera.translateX(500) }, [])
+  useEffect(() => { applyLandmarksToModel(landmarks, nodes as { [e in string]: Bone }) }, [landmarks])
 
 
   return (
     <group dispose={null}>
       {
-        'geometry' in nodes.Beta_Surface ?
-          <skinnedMesh geometry={nodes.Beta_Surface.geometry} skeleton={nodes.Beta_Surface.skeleton} />
+        'geometry' in dancer ?
+          <>
+            <group rotation={[Math.PI / 2, Math.PI / 2, 0]}>
+              <primitive object={nodes["mixamorigHips"]} />
+              <skinnedMesh receiveShadow castShadow geometry={dancer.geometry} skeleton={dancer.skeleton} >
+                <meshStandardMaterial map={texture} map-flipY={false} skinning />
+              </skinnedMesh>
+              <OrbitControls camera={camera} />
+            </group>
+          </>
           : null
       }
     </group>
@@ -81,8 +108,8 @@ const pose: FC = () => {
 
 
   return <>
-    <Canvas style={{ height: '100vh' }}>
-      {landmarks?.length && landmarks.map((landmark, i) => {
+    <Canvas style={{ height: '70vh' }}>
+      {/* {landmarks?.length && landmarks.map((landmark, i) => {
         const { x, y, z } = landmark
         return <Box key={i} position={[x, -y, z]} />
       })}
@@ -93,13 +120,14 @@ const pose: FC = () => {
           const point1 = new Vector3(x1, -y1, z1)
           const point2 = new Vector3(x2, -y2, z2)
           return <BoxBlue
+            key={i}
             position={point1.add(point2.sub(point1).divideScalar(2))}
             rotation={new Euler().setFromVector3(point2.sub(point1))}
           ></BoxBlue>
-        })}
+        })} */}
       <Suspense fallback={null}>
         {/* <StacySample /> */}
-        <Dancer />
+        {landmarks && <Dancer landmarks={landmarks} />}
       </Suspense>
     </Canvas>
     <video autoPlay={true} ref={videoRef} width={300} />
