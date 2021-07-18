@@ -5,7 +5,7 @@ import { OrbitControls, useGLTF, useTexture } from '@react-three/drei'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { reverse } from 'dns'
 import React, { FC, Suspense, useEffect, useRef } from "react"
-import { Bone, Euler, Object3D, Quaternion, SkinnedMesh, Vector3 } from "three"
+import { Bone, Euler, Matrix3, Matrix4, Object3D, Quaternion, SkinnedMesh, Vector3 } from "three"
 import { GLTF } from "three/examples/jsm/loaders/GLTFLoader"
 
 const Box: FC<JSX.IntrinsicElements['mesh']> = (props) => <mesh {...props}>
@@ -14,7 +14,7 @@ const Box: FC<JSX.IntrinsicElements['mesh']> = (props) => <mesh {...props}>
 
 const BoxBlue: FC<JSX.IntrinsicElements['mesh']> = (props) => <mesh {...props}>
   <boxGeometry args={[10, 10, 10]} />
-  <meshStandardMaterial color='blue' />
+  <meshBasicMaterial color='blue' />
 </mesh>
 
 function moveJoint(joint: Bone, frame = 0) {
@@ -45,10 +45,9 @@ const applyLandmarksToModel =
   (landmarks: NormalizedLandmarkList,
     skeletonNodes: { [e in string]: Bone | undefined }
   ) => {
-    Object.keys(blazeposeToMixamoMap).map((blazeposeIndex) => {
+    Object.entries(blazeposeToMixamoMap).map(([blazeposeIndex, boneName]) => {
       const landmark = landmarks[Number(blazeposeIndex)]
-      // Get parent landmark
-      const bone = skeletonNodes[blazeposeToMixamoMap[blazeposeIndex]]
+      const bone = skeletonNodes[boneName]
       if (bone) {
         const parentLandmark = bone?.parent?.name ? landmarks[Number(mixamoToBlazepose[bone.parent.name])] : { x: 0, y: 0, z: 0 }
         const landmarkVec3 = landmarkToVec3(landmark)
@@ -71,7 +70,23 @@ const Dancer: FC<{ landmarks: NormalizedLandmarkList }> = ({ landmarks }) => {
 
 
   useEffect(() => { console.log(nodes); camera.translateZ(-500) }, [])
-  useEffect(() => { applyLandmarksToModel(landmarks, nodes as { [e in string]: Bone }) }, [landmarks])
+  // useEffect(() => { applyLandmarksToModel(landmarks, nodes as { [e in string]: Bone }) }, [landmarks])
+  useFrame(({ clock }) => {
+    Object.entries(blazeposeToMixamoMap).map(([blazeposeIndex, boneName]) => {
+      const landmark = landmarks[Number(blazeposeIndex)]
+      const bone = nodes[boneName]
+      const tan = clock.getElapsedTime() % 1 * 3.14 * 2
+      const vec3a = new Vector3(0, tan, 2).normalize()
+      const vec3b = new Vector3(0, 1, 1).normalize()
+      const vec3c = vec3a.cross(vec3b)
+      const vec3d = new Vector3(0, 0, 0)
+      const m = new Matrix4();
+      m.set(...vec3a.toArray(), 0, ...vec3b.toArray(), 0, ...vec3c.toArray(), 0, ...vec3d.toArray(), 1)
+      // const angle = new Euler().setFromRotationMatrix(m)
+
+      bone.setRotationFromMatrix(m)
+    })
+  })
 
 
   return (
@@ -82,7 +97,7 @@ const Dancer: FC<{ landmarks: NormalizedLandmarkList }> = ({ landmarks }) => {
             <group rotation={[Math.PI / 2, 0, Math.PI]}>
               <primitive object={nodes["mixamorigHips"]} />
               <skinnedMesh receiveShadow castShadow geometry={dancer.geometry} skeleton={dancer.skeleton} >
-                <meshStandardMaterial map={texture} map-flipY={false} skinning />
+                <meshBasicMaterial map={texture} map-flipY={false} skinning />
               </skinnedMesh>
               <OrbitControls camera={camera} />
             </group>
@@ -116,12 +131,11 @@ const pose: FC = () => {
 
   return <>
     <Canvas style={{ height: '70vh' }}>
-      {landmarks?.length && landmarks.map((landmark, i) => {
+      {/* {landmarks?.length && landmarks.map((landmark, i) => {
         const { x, y, z } = landmark
         return <BoxBlue key={i} position={[-x * 100, -y * 100, z * 100]} />
-      })}
+      })} */}
       <Suspense fallback={null}>
-        {/* <StacySample /> */}
         {landmarks && <Dancer landmarks={landmarks} />}
       </Suspense>
     </Canvas>
