@@ -1,4 +1,5 @@
-module.exports = {
+const withTM = require('next-transpile-modules')(['three']);
+module.exports = withTM({
   reactStrictMode: true,
   basePath: process.env.NODE_ENV === 'production' ? '/brain-whatever' : '',
   webpack: {
@@ -16,4 +17,4 @@ module.exports = {
   globals: {
     React: 'writable',
   },
-};
+});
