@@ -3,9 +3,8 @@ import { NormalizedLandmark } from '@mediapipe/drawing_utils'
 import { NormalizedLandmarkList } from '@mediapipe/pose'
 import { OrbitControls, useGLTF, useTexture } from '@react-three/drei'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { reverse } from 'dns'
 import React, { FC, Suspense, useEffect, useRef } from "react"
-import { Bone, Euler, Matrix3, Matrix4, Object3D, Quaternion, SkinnedMesh, Vector3 } from "three"
+import { Bone, Euler, Matrix3, Matrix4, Object3D, Quaternion, SkinnedMesh, Vector2, Vector3 } from "three"
 import { GLTF } from "three/examples/jsm/loaders/GLTFLoader"
 
 const Box: FC<JSX.IntrinsicElements['mesh']> = (props) => <mesh {...props}>
@@ -60,8 +59,14 @@ const applyLandmarksToModel =
       }
     })
   }
-
-const Dancer: FC<{ landmarks: NormalizedLandmarkList }> = ({ landmarks }) => {
+const defaultScale = new Vector3(0.02, 0.02, 0.02)
+const defaultCameraVector = new Vector3(0, 0, -30)
+const logGraph = (x: number) => {
+  const bar = '□□□□□△□□□□□'.split('')
+  bar.splice(Math.round(x * 5) + 5, 1, '■')
+  console.log(bar.join('') + ' ' + x)
+}
+const Dancer: FC<{ landmarks?: NormalizedLandmarkList }> = ({ landmarks }) => {
   const texture = useTexture('stacy.jpg')
   const gltf = useGLTF('dancer.glb', '/') as GLTF & { nodes: { [e in string]: (Object3D | Bone | SkinnedMesh) } }
   const { nodes } = gltf
@@ -69,16 +74,19 @@ const Dancer: FC<{ landmarks: NormalizedLandmarkList }> = ({ landmarks }) => {
   const { camera } = useThree()
 
 
-  useEffect(() => { console.log(nodes); camera.translateZ(-500) }, [])
   // useEffect(() => { applyLandmarksToModel(landmarks, nodes as { [e in string]: Bone }) }, [landmarks])
   useFrame(({ clock }) => {
     Object.entries(blazeposeToMixamoMap).map(([blazeposeIndex, boneName]) => {
-      const landmark = landmarks[Number(blazeposeIndex)]
+      // const landmark = landmarks[Number(blazeposeIndex)]
       const bone = nodes[boneName]
-      const tan = clock.getElapsedTime() % 1 * 3.14 * 2
-      const vec3a = new Vector3(0, tan, 2).normalize()
-      const vec3b = new Vector3(0, 1, 1).normalize()
-      const vec3c = vec3a.cross(vec3b)
+      const sin = Math.sin(clock.getElapsedTime() % (Math.PI * 2) - Math.PI)
+      const cos = Math.cos(clock.getElapsedTime() % (Math.PI * 2) - Math.PI)
+      const tan = Math.tan(clock.getElapsedTime() % (Math.PI * 2) - Math.PI)
+      logGraph(sin)
+      const vec3a = new Vector3(1, 0, 0)
+      const vec3b = new Vector3(0, cos, -sin)
+      const vec3c = new Vector3(0, sin, cos)
+      // const vec3c = vec3a.cross(vec3b)
       const vec3d = new Vector3(0, 0, 0)
       const m = new Matrix4();
       m.set(...vec3a.toArray(), 0, ...vec3b.toArray(), 0, ...vec3c.toArray(), 0, ...vec3d.toArray(), 1)
@@ -94,7 +102,7 @@ const Dancer: FC<{ landmarks: NormalizedLandmarkList }> = ({ landmarks }) => {
       {
         'geometry' in dancer ?
           <>
-            <group rotation={[Math.PI / 2, 0, Math.PI]}>
+            <group rotation={[Math.PI / 2, 0, Math.PI]} scale={defaultScale}>
               <primitive object={nodes["mixamorigHips"]} />
               <skinnedMesh receiveShadow castShadow geometry={dancer.geometry} skeleton={dancer.skeleton} >
                 <meshBasicMaterial map={texture} map-flipY={false} skinning />
@@ -108,25 +116,24 @@ const Dancer: FC<{ landmarks: NormalizedLandmarkList }> = ({ landmarks }) => {
   )
 }
 
-const pose: FC = () => {
+export default function Pose() {
   const videoRef = useRef<HTMLVideoElement>(null)
-  const mesh = useRef<THREE.Mesh>(null!)
 
-  useEffect(() => {
-    if (navigator.mediaDevices.getUserMedia) {
-      navigator.mediaDevices.getUserMedia({ video: true })
-        .then((stream) => {
-          if (videoRef.current) {
-            videoRef.current.srcObject = stream
-          }
-        })
-        .catch((err0r) => {
-          console.log("Something went wrong!")
-          console.log(err0r)
-        });
-    }
-  }, [])
-  const landmarks = usePose({ videoRef })
+  // useEffect(() => {
+  //   if (navigator.mediaDevices.getUserMedia) {
+  //     navigator.mediaDevices.getUserMedia({ video: true })
+  //       .then((stream) => {
+  //         if (videoRef.current) {
+  //           videoRef.current.srcObject = stream
+  //         }
+  //       })
+  //       .catch((err0r) => {
+  //         console.log("Something went wrong!")
+  //         console.log(err0r)
+  //       });
+  //   }
+  // }, [])
+  // const landmarks = usePose({ videoRef })
 
 
   return <>
@@ -136,10 +143,10 @@ const pose: FC = () => {
         return <BoxBlue key={i} position={[-x * 100, -y * 100, z * 100]} />
       })} */}
       <Suspense fallback={null}>
-        {landmarks && <Dancer landmarks={landmarks} />}
+        <Dancer />
+        {/* {landmarks && <Dancer landmarks={landmarks} />} */}
       </Suspense>
     </Canvas>
     <video autoPlay={true} ref={videoRef} width={300} />
   </>
 }
-export default pose
