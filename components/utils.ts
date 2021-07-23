@@ -1,42 +1,47 @@
-export function getMouseDegrees(x: number, y: number, degreeLimit: number) {
-  let dx = 0,
-    dy = 0,
-    xdiff,
-    xPercentage,
-    ydiff,
-    yPercentage;
+import { NormalizedLandmark } from '@mediapipe/drawing_utils';
+import { Bone, Vector3 } from 'three';
+export const landmarkToVec3 = (landmark: NormalizedLandmark): Vector3 =>
+  new Vector3(landmark.x, -landmark.y, landmark.z);
+export const blazeposeLeftNameToMixamoMap = {
+  11: 'LeftArm',
+  13: 'LeftForeArm',
+  15: 'LeftHand',
+  // 23: 'LeftUpLeg',
+  // 25: 'LeftLeg',
+  // 27: 'LeftLeg',
+} as const;
+export const blazeposeLeftToMixamoMap = Object.fromEntries(
+  Object.entries(blazeposeLeftNameToMixamoMap).map(
+    ([blazeposeIndex, mixamoBoneId]) => [
+      blazeposeIndex,
+      `mixamorig${mixamoBoneId}`,
+    ]
+  )
+);
+export const blazeposeRightToMixamoMap = Object.fromEntries(
+  Object.entries(blazeposeLeftToMixamoMap).map<[number, string]>(
+    ([blazeposeIndex, mixamoBoneId]) => [
+      Number(blazeposeIndex) + 1,
+      mixamoBoneId.replace('Left', 'Right'),
+    ]
+  )
+);
+export const blazeposeToMixamoMap = {
+  ...blazeposeLeftToMixamoMap,
+  // ...blazeposeRightToMixamoMap
+};
+export const reverseDict = (obj: { [e in string]: string }) =>
+  Object.fromEntries(Object.entries(obj).map(([k, v]) => [v, k]));
+export const mixamoToBlazepose: { [e in string]: string | undefined } = {
+  ...reverseDict(blazeposeToMixamoMap),
+  LeftShoulder: '11',
+  RightShoulder: '12',
+};
+export type SkeletonNodes = { [e in string]: Bone | undefined };
 
-  let w = { x: window.innerWidth, y: window.innerHeight };
-
-  // Left (Rotates neck left between 0 and -degreeLimit)
-  // 1. If cursor is in the left half of screen
-  if (x <= w.x / 2) {
-    // 2. Get the difference between middle of screen and cursor position
-    xdiff = w.x / 2 - x;
-    // 3. Find the percentage of that difference (percentage toward edge of screen)
-    xPercentage = (xdiff / (w.x / 2)) * 100;
-    // 4. Convert that to a percentage of the maximum rotation we allow for the neck
-    dx = ((degreeLimit * xPercentage) / 100) * -1;
-  }
-
-  // Right (Rotates neck right between 0 and degreeLimit)
-  if (x >= w.x / 2) {
-    xdiff = x - w.x / 2;
-    xPercentage = (xdiff / (w.x / 2)) * 100;
-    dx = (degreeLimit * xPercentage) / 100;
-  }
-  // Up (Rotates neck up between 0 and -degreeLimit)
-  if (y <= w.y / 2) {
-    ydiff = w.y / 2 - y;
-    yPercentage = (ydiff / (w.y / 2)) * 100;
-    // Note that I cut degreeLimit in half when she looks up
-    dy = ((degreeLimit * 0.5 * yPercentage) / 100) * -1;
-  }
-  // Down (Rotates neck down between 0 and degreeLimit)
-  if (y >= w.y / 2) {
-    ydiff = y - w.y / 2;
-    yPercentage = (ydiff / (w.y / 2)) * 100;
-    dy = (degreeLimit * yPercentage) / 100;
-  }
-  return { x: dx, y: dy };
-}
+export const logGraph = (x: number) => {
+  const bar = '□□□□□△□□□□□'.split('');
+  const clampped = Math.min(Math.max(x, -1), 1);
+  bar.splice(Math.round(clampped * 5 + 5), 1, '■');
+  console.log(bar.join('') + x);
+};
