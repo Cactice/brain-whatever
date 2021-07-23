@@ -4,7 +4,7 @@ import { NormalizedLandmarkList } from '@mediapipe/pose'
 import { OrbitControls, useGLTF, useTexture } from '@react-three/drei'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import React, { FC, Suspense, useEffect, useRef, useState } from "react"
-import { Bone, Euler, Matrix3, Matrix4, Object3D, Quaternion, SkinnedMesh, Vector2, Vector3 } from "three"
+import { Bone, Clock, Euler, Matrix3, Matrix4, Object3D, Quaternion, SkinnedMesh, Vector2, Vector3 } from "three"
 import { GLTF } from "three/examples/jsm/loaders/GLTFLoader"
 
 const Box: FC<JSX.IntrinsicElements['mesh']> = (props) => <mesh {...props}>
@@ -59,7 +59,7 @@ const applyLandmarksToModel =
           bone.setRotationFromQuaternion(currentAngle.invert())
         } else {
           const angleQ = new Quaternion().setFromEuler(angle)
-          const angleDiff = currentAngle.invert().multiply(angleQ)
+          const angleDiff = currentAngle.multiply(angleQ)
           bone.setRotationFromEuler(new Euler().setFromQuaternion(angleDiff))
         }
       }
@@ -82,10 +82,7 @@ const Dancer: FC<{ landmarks: NormalizedLandmarkList }> = ({ landmarks }) => {
   const dancer = nodes.Beta_Surface as SkinnedMesh
   const { camera } = useThree()
   const [initialE, setInitialE] = useState<Euler>(new Euler())
-
-
-  // useEffect(() => { applyLandmarksToModel(landmarks, nodes as { [e in string]: Bone }) }, [landmarks])
-  useFrame(({ clock }) => {
+  const debug = (clock: Clock) => {
     Object.entries(blazeposeToMixamoMap).map(([blazeposeIndex, boneName]) => {
       // const landmark = landmarks[Number(blazeposeIndex)]
       const bone = nodes[boneName]
@@ -111,7 +108,6 @@ const Dancer: FC<{ landmarks: NormalizedLandmarkList }> = ({ landmarks }) => {
       const q = new Quaternion(x, y, z, w)
       const currentAngle = new Quaternion()
 
-      q.slerp(currentAngle, 0.1)
       bone.setRotationFromEuler(new Euler().setFromVector3(vec3a))
       if (boneName === 'mixamorigLeftArm' || boneName === 'mixamorigLeftForeArm') {
         bone.setRotationFromQuaternion(q)
@@ -119,11 +115,16 @@ const Dancer: FC<{ landmarks: NormalizedLandmarkList }> = ({ landmarks }) => {
       else {
         bone.parent?.getWorldQuaternion(currentAngle)
         setInitialE(new Euler().setFromQuaternion(currentAngle.invert()))
-        console.log(initialE)
         bone.setRotationFromQuaternion(currentAngle)
       }
     })
-  })
+  }
+
+
+  useEffect(() => { applyLandmarksToModel(landmarks, nodes as SkeletonNodes) }, [landmarks])
+  // useFrame(({ clock }) => {
+  //   debug(clock)
+  // })
 
 
   return (
@@ -149,34 +150,34 @@ const Dancer: FC<{ landmarks: NormalizedLandmarkList }> = ({ landmarks }) => {
 export default function Pose() {
   const videoRef = useRef<HTMLVideoElement>(null)
 
-  // useEffect(() => {
-  //   if (navigator.mediaDevices.getUserMedia) {
-  //     navigator.mediaDevices.getUserMedia({ video: true })
-  //       .then((stream) => {
-  //         if (videoRef.current) {
-  //           videoRef.current.srcObject = stream
-  //         }
-  //       })
-  //       .catch((err0r) => {
-  //         console.log("Something went wrong!")
-  //         console.log(err0r)
-  //       });
-  //   }
-  // }, [])
-  // const landmarks = usePose({ videoRef })
+  useEffect(() => {
+    if (navigator.mediaDevices.getUserMedia) {
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then((stream) => {
+          if (videoRef.current) {
+            videoRef.current.srcObject = stream
+          }
+        })
+        .catch((err0r) => {
+          console.log("Something went wrong!")
+          console.log(err0r)
+        });
+    }
+  }, [])
+  const landmarks = usePose({ videoRef })
 
 
   return <>
     <Canvas style={{ height: '70vh' }}>
-      {/* {landmarks?.length && landmarks.map((landmark, i) => {
+      {landmarks?.length && landmarks.map((landmark, i) => {
         const { x, y, z } = landmark
         return <BoxBlue key={i} position={[-x, -y, z]} />
-      })} */}
+      })}
       <Suspense fallback={null}>
-        <Dancer />
-        {/* {landmarks && <Dancer landmarks={landmarks} />} */}
+        {/* <Dancer /> */}
+        {landmarks && <Dancer landmarks={landmarks} />}
       </Suspense>
     </Canvas>
-    {/* <video autoPlay={true} ref={videoRef} width={300} /> */}
+    <video autoPlay={true} ref={videoRef} width={300} />
   </>
 }
