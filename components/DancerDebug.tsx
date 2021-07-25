@@ -22,12 +22,11 @@ export const useDebugDancer = ({ nodes }: { nodes: { [e in string]: (Object3D | 
     const tan = Math.tan(clock.getElapsedTime() % (Math.PI * 2) - Math.PI)
 
     const direction = vec.set(mouse.x * 10, mouse.y * 10, 0)
+    const directionQ = q.setFromUnitVectors(new Vector3(0, 1, 0), direction.clone().normalize())
     setConeVec3(direction)
     if (coneRef.current) {
       coneRef.current.position.x = direction.x
       coneRef.current.position.y = direction.y
-      const directionQ = q.setFromUnitVectors(new Vector3(0, -1, 0), direction.clone().normalize())
-      const directionE = e.setFromQuaternion(directionQ)
       coneRef.current.setRotationFromQuaternion(directionQ)
       console.log(coneRef)
     }
@@ -54,14 +53,17 @@ export const useDebugDancer = ({ nodes }: { nodes: { [e in string]: (Object3D | 
       const currentAngle = new Quaternion()
 
       // bone.setRotationFromEuler(new Euler().setFromVector3(direction))
-      // if (boneName === 'mixamorigLeftArm' || boneName === 'mixamorigLeftForeArm') {
-      // bone.setRotationFromQuaternion(q)
-      // }
-      // else {
-      // bone.parent?.getWorldQuaternion(currentAngle)
-      // const targetQ = currentAngle.invert().multiply(directionQ)
-      // bone.setRotationFromQuaternion(targetQ)
-      // }
+      const directionQ2 = directionQ.clone().multiply(new Quaternion(0, 0, -0.8509035, 0.525322))
+      if (boneName.includes('Left')) {
+        bone.parent?.getWorldQuaternion(currentAngle)
+        const targetQ = currentAngle.clone().invert().multiply(directionQ2).multiply(new Quaternion(0, -1, 0, 0))
+        bone.setRotationFromQuaternion(targetQ)
+      }
+      else {
+        bone.parent?.getWorldQuaternion(currentAngle)
+        const targetQ = currentAngle.clone().invert().multiply(directionQ2).multiply(new Quaternion(0.7, 0, 0, 0.7))
+        bone.setRotationFromQuaternion(targetQ)
+      }
     })
   }
   return { debug, coneE, coneVec3, coneRef }
