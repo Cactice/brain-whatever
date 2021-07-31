@@ -1,7 +1,7 @@
 import React, { ReactNode } from "react";
 import Head from "next/head";
 import "bootstrap/dist/css/bootstrap.min.css";
-import { basePath } from "next.config";
+import { basePath } from "path";
 
 type Props = {
   children?: ReactNode;
