@@ -1,4 +1,6 @@
-# The possibilities of clubs in the remote age
+# Pose-world
+
+## Motivation: In search of the possibilities of clubs in the remote age
 
 Ever since Covid, it's become difficult to hold events at clubs due to the concern of the virus spreading.
 On the other hand, there are no concerns with holding events online. However, online music events to be oneway from artist to the crowd, with the crowd often solely listening and outputting no particular inforamation. This is in contrast to real events where the crowd would dance, enjoy music in their own taste, and interact with each other. With the lack of interaction between the crowds, the online music events tend to lack the fun that clubs had so I wanted to think about some possibile potentials of internet virtual musical events.
@@ -13,3 +15,5 @@ A solution to this is to use VR but VR devices are not in the hands of many, lim
 ## Applying effects to dance with shaders
 
 ## Bluring the role of the crowd and the artist
+
+## Dancing interface
