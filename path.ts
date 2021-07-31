@@ -1,1 +1,2 @@
-export const basePath =  process.env.NODE_ENV==='production' ? '/brain-whatever': '';
+export const basePath =
+  process.env.NODE_ENV === 'production' ? '/pose-world' : '';
