@@ -53,7 +53,7 @@ export const useDebugDancer = ({ nodes }: { nodes: { [e in string]: (Object3D | 
       const currentAngle = new Quaternion()
 
       // bone.setRotationFromEuler(new Euler().setFromVector3(direction))
-      const directionQ2 = directionQ.clone().multiply(new Quaternion(0, 0, -0.8509035, 0.525322))
+      const directionQ2 = directionQ.clone().multiply(new Quaternion(0, 0, -0.8509035, 0.525322)) // rotate 90 degrees on Z
       if (boneName.includes('Left')) {
         bone.parent?.getWorldQuaternion(currentAngle)
         const targetQ = currentAngle.clone().invert().multiply(directionQ2).multiply(new Quaternion(0, -1, 0, 0))

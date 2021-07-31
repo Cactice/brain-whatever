@@ -3,9 +3,9 @@ import { Bone, Vector3 } from 'three';
 export const landmarkToVec3 = (landmark: NormalizedLandmark): Vector3 =>
   new Vector3(landmark.x, -landmark.y, landmark.z);
 export const blazeposeLeftNameToMixamoMap = {
-  11: 'LeftArm',
-  13: 'LeftForeArm',
-  15: 'LeftHand',
+  13: 'LeftArm',
+  15: 'LeftForeArm',
+  17: 'LeftHand',
   // 23: 'LeftUpLeg',
   // 25: 'LeftLeg',
   // 27: 'LeftLeg',
@@ -28,7 +28,7 @@ export const blazeposeRightToMixamoMap = Object.fromEntries(
 );
 export const blazeposeToMixamoMap = {
   ...blazeposeLeftToMixamoMap,
-  // ...blazeposeRightToMixamoMap
+  ...blazeposeRightToMixamoMap,
 };
 export const reverseDict = (obj: { [e in string]: string }) =>
   Object.fromEntries(Object.entries(obj).map(([k, v]) => [v, k]));
@@ -39,9 +39,12 @@ export const mixamoToBlazepose: { [e in string]: string | undefined } = {
 };
 export type SkeletonNodes = { [e in string]: Bone | undefined };
 
-export const logGraph = (x: number) => {
-  const bar = '□□□□□△□□□□□'.split('');
-  const clampped = Math.min(Math.max(x, -1), 1);
-  bar.splice(Math.round(clampped * 5 + 5), 1, '■');
-  console.log(bar.join('') + x);
+export const logGraph = (x: any) => {
+  if (typeof x === 'number') {
+    const bar = '□□□□□△□□□□□'.split('');
+    const clampped = Math.min(Math.max(x, -1), 1);
+    bar.splice(Math.round(clampped * 5 + 5), 1, '■');
+    console.log(bar.join('') + x);
+  }
+  console.log(x);
 };

@@ -1,11 +1,5 @@
 import { Camera } from '@mediapipe/camera_utils';
-import { drawConnectors, drawLandmarks } from '@mediapipe/drawing_utils';
-import {
-  NormalizedLandmarkList,
-  Pose,
-  POSE_CONNECTIONS,
-  ResultsListener,
-} from '@mediapipe/pose';
+import { NormalizedLandmarkList, Pose, ResultsListener } from '@mediapipe/pose';
 import { RefObject, useEffect, useState } from 'react';
 
 export const usePose = ({

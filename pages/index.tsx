@@ -1,5 +1,4 @@
 import { Box, Cone } from '@components/BasicObjects'
-import { DancerDebug } from '@components/DancerDebug'
 import { blazeposeLeftNameToMixamoMap, blazeposeToMixamoMap, landmarkToVec3, mixamoToBlazepose, SkeletonNodes } from '@components/utils'
 import { usePose } from '@hooks/usePose'
 import { NormalizedLandmarkList } from '@mediapipe/pose'
@@ -29,9 +28,22 @@ const applyLandmarksToModel =
         //   bone.parent?.getWorldQuaternion(currentAngle)
         //   bone.setRotationFromQuaternion(currentAngle)
         // } else {
-        const angleQ = new Quaternion().setFromEuler(angle)
-        const angleDiff = currentAngle.invert().multiply(angleQ)
-        bone.setRotationFromEuler(new Euler().setFromQuaternion(angleDiff))
+        // const angleQ = new Quaternion().setFromEuler(angle)
+        const direction = parentLandmarkVec3.sub(landmarkVec3)
+        const directionQ = new Quaternion().setFromUnitVectors(new Vector3(0, 1, 0), direction.clone().normalize())
+        const directionQ2 = directionQ.clone().multiply(new Quaternion(0.5110536, 0, 0.5110536, 0.6911211)) // rotate 90 degrees on Z
+        if (boneName.includes('Left')) {
+          bone.parent?.getWorldQuaternion(currentAngle)
+          const targetQ = currentAngle.clone().invert().multiply(directionQ2).multiply(new Quaternion(0, -1, 0, 0))
+          bone.setRotationFromQuaternion(targetQ)
+        }
+        else {
+          bone.parent?.getWorldQuaternion(currentAngle)
+          const targetQ = currentAngle.clone().invert().multiply(directionQ2)
+          bone.setRotationFromQuaternion(targetQ)
+        }
+        // const angleDiff = currentAngle.invert().multiply(angleQ)
+        // bone.setRotationFromEuler(new Euler().setFromQuaternion(angleDiff))
         // }
       }
     })
@@ -43,7 +55,6 @@ const Dancer: FC<{ landmarks: NormalizedLandmarkList }> = ({ landmarks }) => {
   const gltf = useGLTF('dancer.glb', '/') as GLTF & { nodes: { [e in string]: (Object3D | Bone | SkinnedMesh) } }
   const { nodes } = gltf
   const dancer = nodes.Beta_Surface as SkinnedMesh
-  const [initialE, setInitialE] = useState<Euler>(new Euler())
 
 
   useEffect(() => { applyLandmarksToModel(landmarks, nodes as SkeletonNodes) }, [landmarks])
@@ -54,7 +65,6 @@ const Dancer: FC<{ landmarks: NormalizedLandmarkList }> = ({ landmarks }) => {
       {
         'geometry' in dancer ?
           <>
-            <Box props={{ rotation: initialE }} color={'green'} />
             <group rotation={[Math.PI / 2, 0, Math.PI]} scale={defaultScale}>
               <primitive object={nodes["mixamorigHips"]} />
               <skinnedMesh receiveShadow castShadow geometry={dancer.geometry} skeleton={dancer.skeleton} >
@@ -72,47 +82,49 @@ const Camera: FC = () => {
   const { camera } = useThree()
   return <OrbitControls camera={camera} />
 }
-const debugLandmark = ({ landmarks }: { landmarks: NormalizedLandmarkList }) => {
-  landmarks?.length && landmarks.map((landmark, i) => {
-    if ('x' in landmark) {
-      const { x, y, z } = landmark
-      const color = i in blazeposeLeftNameToMixamoMap ? 'red' : 'blue'
-      const landmarkVec3 = landmarkToVec3(landmark)
-      const parentLandmarkVec3 = landmarkToVec3(landmarks[i - 2] ? landmarks[i - 2] : landmark)
+const DebugLandmark = ({ landmarks }: { landmarks: NormalizedLandmarkList }) => {
+  return <>
+    {landmarks?.length && landmarks.map((landmark, i) => {
+      if ('x' in landmark) {
+        const { x, y, z } = landmark
+        const color = i in blazeposeLeftNameToMixamoMap ? 'red' : 'blue'
+        const landmarkVec3 = landmarkToVec3(landmark)
+        const parentLandmarkVec3 = landmarkToVec3(landmarks[i - 2] ? landmarks[i - 2] : landmark)
 
-      const angle = new Euler().setFromVector3(parentLandmarkVec3.sub(landmarkVec3).multiplyScalar(-1))
+        const angle = new Euler().setFromVector3(parentLandmarkVec3.sub(landmarkVec3).multiplyScalar(-1))
 
-      return <Cone key={i} props={{ position: [x, -y, z], rotation: angle }} color={color} />
-    }
-  })
+        return <Cone key={i} props={{ position: [x, -y, z], rotation: angle }} color={color} />
+      }
+    })}
+  </>
 }
 
 export default function Pose() {
   const videoRef = useRef<HTMLVideoElement>(null)
 
-  // useEffect(() => {
-  //   if (navigator.mediaDevices.getUserMedia) {
-  //     navigator.mediaDevices.getUserMedia({ video: true })
-  //       .then((stream) => {
-  //         if (videoRef.current) {
-  //           videoRef.current.srcObject = stream
-  //         }
-  //       })
-  //       .catch((err0r) => {
-  //         console.log("Something went wrong!")
-  //         console.log(err0r)
-  //       });
-  //   }
-  // }, [])
-  // const landmarks = usePose({ videoRef })
+  useEffect(() => {
+    if (navigator.mediaDevices.getUserMedia) {
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then((stream) => {
+          if (videoRef.current) {
+            videoRef.current.srcObject = stream
+          }
+        })
+        .catch((err0r) => {
+          console.log("Something went wrong!")
+          console.log(err0r)
+        });
+    }
+  }, [])
+  const landmarks = usePose({ videoRef })
 
 
   return <>
     <Canvas style={{ height: '70vh' }}>
 
       <Suspense fallback={null}>
-        <DancerDebug />
-        {/* {landmarks && <Dancer landmarks={landmarks} />} */}
+        {/* <DancerDebug /> */}
+        {landmarks && <><Dancer landmarks={landmarks} /><DebugLandmark landmarks={landmarks} /></>}
       </Suspense>
       <Camera />
     </Canvas>
