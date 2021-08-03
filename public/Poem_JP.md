@@ -1,4 +1,4 @@
-＃ Pose World
+# Pose World
 
 ## リモート時代のクラブの可能性を求めて
 
