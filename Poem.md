@@ -3,7 +3,7 @@
 ## Motivation: In search of the possibilities of clubs in the remote age
 
 Ever since Covid, it's become difficult to hold events at clubs due to the concern of the virus spreading.
-On the other hand, there are no concerns with holding events online. However, online music events to be one way from artist to the crowd, with the crowd often solely listening and outputting no particular inforamation. This is in contrast to real events where the crowd would dance, enjoy music in their own taste, and interact with each other. With the lack of interaction between the crowds, the online music events tend to lack the fun that clubs had so I wanted to think about some possibile potentials of internet virtual musical events.
+On the other hand, there are no concerns with holding events online. However, online music events to be one way from artist to the crowd, with the crowd often solely listening and outputting no particular information. This is in contrast to real events where the crowd would dance, enjoy music in their own taste, and interact with each other. With the lack of interaction between the crowds, the online music events tend to lack the fun that clubs had so I wanted to think about some possible potentials of internet virtual musical events.
 
 ## Extracting Dance with Pose estimation
 
@@ -20,7 +20,7 @@ In order to make it more interesting than simply displaying dancing 3d models, I
 For example there might be an umbrella object which by opening it up applies a low pass filter both sonically and visually(blurring).
 Another example would be a mirror which delays the input, and two mirrors could be faced together to achieve a looper like effect.
 
-These effect items should be applied by users to themselves or others nearby. This allows for a form of nonverbal communication that is unseen in traditional clubs but adds to the experience.
+These effect items should be applied by users to themselves or others nearby. This allows for a form of nonverbal communication that is unseen in traditional clubs and adds to the experience.
 
 ## Dealing with delays
 
