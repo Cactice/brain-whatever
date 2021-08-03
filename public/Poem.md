@@ -21,6 +21,7 @@ For example there might be an umbrella object which by opening it up applies a l
 Another example would be a mirror which delays the input, and two mirrors could be faced together to achieve a looper like effect.
 
 These effect items should be applied by users to themselves or others nearby. This allows for a form of nonverbal communication that is unseen in traditional clubs and adds to the experience.
+[Work in Progress Pose to 3D Model Demo](https://www.cactice.com/pose-world/)
 
 ## Dealing with delays
 
