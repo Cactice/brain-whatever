@@ -3,7 +3,7 @@
 ## Motivation: In search of the possibilities of clubs in the remote age
 
 Ever since Covid, it's become difficult to hold events at clubs due to the concern of the virus spreading.
-On the other hand, there are no concerns with holding events online. However, online music events to be one way from artist to the crowd, with the crowd often solely listening and outputting no particular information. This is in contrast to real events where the crowd would dance, enjoy music in their own taste, and interact with each other. With the lack of interaction between the crowds, the online music events tend to lack the fun that clubs had so I wanted to think about some possible potentials of internet virtual musical events.
+On the other hand, there are no concerns with holding events online. However, online music events to be one way from artist to the crowd, with the crowd often solely listening and outputting no particular information. This is in contrast to real events where the crowd would dance, enjoy music in their own taste, and interact with each other. With the lack of interaction between the crowds, the online music events lack the fun that clubs had so I wanted to think about the potentials of internet virtual musical events by creating a virtual club platform.
 
 ## Extracting Dance with Pose estimation
 
